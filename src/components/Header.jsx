@@ -11,27 +11,6 @@ const Navbar = ({ onLogout }) => {
         <div className="flex justify-between items-center h-16">
           {/* Logo and Brand Section */}
           <div className="flex items-center">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <svg 
-                className="h-10 w-10 text-white"
-                viewBox="0 0 40 40"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle cx="20" cy="20" r="20" fill="currentColor" />
-                <text
-                  x="50%"
-                  y="50%"
-                  textAnchor="middle"
-                  dy=".3em"
-                  fill="#FF6B00"
-                  className="text-xl font-bold"
-                >
-                  W
-                </text>
-              </svg>
-            </div>
 
             {/* Brand Text */}
             <div className="ml-4">
@@ -40,7 +19,7 @@ const Navbar = ({ onLogout }) => {
                 <div className="flex flex-col md:flex-row md:items-center">
                   <span className="text-xs text-orange-100">Powered by Webreich</span>
                   <span className="hidden md:block text-orange-100 mx-2">•</span>
-                  <span className="text-xs text-orange-100">v1.0.2</span>
+                  <span className="text-xs text-orange-100">v2.0</span>
                 </div>
               </div>
             </div>

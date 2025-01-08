@@ -97,26 +97,10 @@ Thank you for trusting Webreich! We're excited to work with you! 🚀`;
       }]
     };
 
-<<<<<<< HEAD
     setAllUsers(prev => [...prev, newUser]);
     
     const message = generateMessage(newUser);
     const whatsappUrl = `https://api.whatsapp.com/send?phone=91${newUser.mobile}&text=${encodeURIComponent(message)}`;
-=======
-  const sendWhatsAppMessage = (data) => {
-    const { name, productCategory, messageTemplate, amount } = data;
-
-    let message;
-
-    if (messageTemplate === 'directConnect') {
-      message = `🚀 Hi ${name},\n\nThank you for exploring Direct Connect by Webreich! 🎯\nOur CRM model is designed to boost your customer relationships effortlessly. \n💼 Price: ₹1,499 / month\n✅ Key Benefits: Efficient client management, detailed analytics, and seamless communication.\n\n📱 Stay connected: https://webreich.vercel.app \nFollow us on Instagram: https://www.instagram.com/webreich/ \nContact: +91 8668722207,+91 9834153020\nDeveloper Portfolio: https://shriyash.vercel.app/ \n https://www.akshaybhaltilak.live/`;
-    } else if (messageTemplate === 'digitalMenu') {
-      message = `🍽 Hi ${name},\n\nWelcome to the future of dining with Webreich's Digital Menu Card! 📲\nOur solution helps restaurants upgrade their customer experience with digital menus. \n💼 Price: ₹2,000\n✅ Key Benefits: Easy updates, contactless service, and increased engagement.\n\n📱 Stay connected: https://webreich.vercel.app \nFollow us on Instagram: https://www.instagram.com/webreich/ \nContact: +91 8668722207,+91 9834153020\nDeveloper Portfolio: https://shriyash.vercel.app/ \n https://www.akshaybhaltilak.live/`;
-    } else {
-      message = `💻 Hi ${name},\n\nThanks for considering Web Services by Webreich! 🌐\nWe offer custom web solutions tailored to your needs. \n💼 Price: ₹15,000\n✅ Key Benefits: Responsive designs, fast performance, and SEO-friendly.\n\n📱 Stay connected: https://webreich.vercel.app \nFollow us on Instagram: https://www.instagram.com/webreich/  \nContact: +91 8668722207,+91 9834153020\nDeveloper Portfolio: https://shriyash.vercel.app/ \n https://www.akshaybhaltilak.live/`;
-    }
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=91${data.mobile}&text=${encodeURIComponent(message)}`;
->>>>>>> 8c09988ea89ebb4484ddf9c652b4031f88e24ea4
     window.open(whatsappUrl, '_blank');
     
     // Reset form
