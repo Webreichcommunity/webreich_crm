@@ -15,7 +15,7 @@ const Navbar = ({ onLogout }) => {
             {/* Brand Text */}
             <div className="ml-4">
               <div className="flex flex-col">
-                <h1 className="text-2xl font-bold text-white">WebReich</h1>
+                <h1 className="text-2xl font-bold text-white">Garud</h1>
                 <div className="flex flex-col md:flex-row md:items-center">
                   <span className="text-xs text-orange-100">Powered by Webreich</span>
                   <span className="hidden md:block text-orange-100 mx-2">•</span>
