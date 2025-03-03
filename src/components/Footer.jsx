@@ -1,149 +1,150 @@
 import React from 'react';
-import { FaGithub, FaLinkedin, FaGlobe, FaInstagram, 
-         FaEnvelope, FaCode, FaHeart } from 'react-icons/fa';
-
-const DeveloperCard = ({ name, image, portfolio, github, linkedin, instagram }) => {
-  return (
-    <div className="flex flex-col items-center bg-white rounded-lg p-4 shadow-lg transform hover:scale-105 transition-all">
-      <div className="relative mb-3">
-        <img
-          src={image}
-          alt={name}
-          className="w-20 h-20 rounded-full border-4 border-orange-500 object-cover"
-        />
-        <div className="absolute -bottom-2 -right-2 bg-orange-500 rounded-full p-1">
-          <FaCode className="text-white w-4 h-4" />
-        </div>
-      </div>
-      <h3 className="font-bold text-gray-800 mb-1">{name}</h3>
-      <p className="text-sm text-orange-600 mb-3">Full Stack Developer</p>
-      
-      <div className="flex space-x-3">
-        {portfolio && (
-          <a
-            href={portfolio}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-600 hover:text-orange-500 transition-colors"
-          >
-            <FaGlobe className="w-5 h-5" />
-          </a>
-        )}
-        {github && (
-          <a
-            href={github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-600 hover:text-orange-500 transition-colors"
-          >
-            <FaGithub className="w-5 h-5" />
-          </a>
-        )}
-        {linkedin && (
-          <a
-            href={linkedin}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-600 hover:text-orange-500 transition-colors"
-          >
-            <FaLinkedin className="w-5 h-5" />
-          </a>
-        )}
-        {instagram && (
-          <a
-            href={instagram}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-600 hover:text-orange-500 transition-colors"
-          >
-            <FaInstagram className="w-5 h-5" />
-          </a>
-        )}
-      </div>
-    </div>
-  );
-};
+import { FaGithub, FaLinkedin, FaTwitter, FaInstagram, 
+         FaEnvelope, FaMapMarkerAlt, FaPhone } from 'react-icons/fa';
 
 const Footer = () => {
-  const developers = [
+  const currentYear = new Date().getFullYear();
+  
+  // Company social links
+  const socialLinks = [
+    { icon: <FaTwitter />, href: "https://twitter.com/webreich", label: "Twitter" },
+    { icon: <FaGithub />, href: "https://github.com/webreich", label: "GitHub" },
+    { icon: <FaLinkedin />, href: "https://linkedin.com/company/webreich", label: "LinkedIn" },
+    { icon: <FaInstagram />, href: "https://instagram.com/webreich", label: "Instagram" }
+  ];
+
+  // Footer links sections
+  const footerSections = [
     {
-      name: "Shriyash Rulhe",
-      image: "https://avatars.githubusercontent.com/u/113467235?v=4",
-      portfolio: "https://shriyash.vercel.app",
-      github: "https://github.com/shriyashlr",
-      linkedin: "https://linkedin.com/in/shriyashrulhe",
-      instagram: "https://instagram.com/shriyash.codes"
+      title: "Company",
+      links: [
+        { name: "About Us", href: "/about" },
+        { name: "Our Team", href: "/team" },
+        { name: "Careers", href: "/careers" },
+        { name: "News", href: "/news" }
+      ]
     },
     {
-      name: "Akshay Bhaltilak",
-      image: "https://akshay-bhaltilak-portfolio.vercel.app/assets/images/my%20img.jpg",
-      portfolio: "https://www.akshaybhaltilak.live/",
-      github: "https://github.com/akshaybhaltilak",
-      linkedin: "https://linkedin.com/in/akshaybhaltilak",
-      instagram: "https://instagram.com/akshay.codes"
+      title: "Services",
+      links: [
+        { name: "Web Development", href: "/services/web-development" },
+        { name: "Mobile Apps", href: "/services/mobile-apps" },
+        { name: "UI/UX Design", href: "/services/design" },
+        { name: "Consulting", href: "/services/consulting" }
+      ]
+    },
+    {
+      title: "Resources",
+      links: [
+        { name: "Blog", href: "/blog" },
+        { name: "Documentation", href: "/docs" },
+        { name: "Case Studies", href: "/case-studies" },
+        { name: "FAQs", href: "/faqs" }
+      ]
     }
   ];
 
   return (
-    <footer className="bg-gradient-to-b from-orange-50 to-orange-100 py-12">
-      <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
-          {/* Company Section */}
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-orange-600 mb-4">
-              WebReich Community
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Empowering businesses with innovative digital solutions. Join our community of forward-thinking entrepreneurs and developers.
-            </p>
+    <footer className="bg-gradient-to-b from-gray-50 to-gray-100">
+      {/* Main Footer Content */}
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Company Info */}
+          <div className="lg:col-span-4">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">WebReich</h2>
+              <div className="w-12 h-1 bg-orange-500 mt-2 mb-4"></div>
+              <p className="text-gray-600 mb-6">
+                Empowering businesses with innovative digital solutions that drive growth and transformation.
+              </p>
+            </div>
+            
+            {/* Contact Information */}
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <FaMapMarkerAlt className="text-orange-500 mt-1 mr-3 flex-shrink-0" />
+                <p className="text-gray-600">123 Business Avenue, Tech District, NY 10001</p>
+              </div>
+              <div className="flex items-center">
+                <FaPhone className="text-orange-500 mr-3 flex-shrink-0" />
+                <p className="text-gray-600">+1 (555) 123-4567</p>
+              </div>
+              <div className="flex items-center">
+                <FaEnvelope className="text-orange-500 mr-3 flex-shrink-0" />
+                <a href="mailto:contact@webreich.com" className="text-gray-600 hover:text-orange-500 transition-colors">
+                  contact@webreich.com
+                </a>
+              </div>
+            </div>
           </div>
-
-          {/* Developers Section */}
-          <div className="mb-12">
-            <h3 className="text-xl font-semibold text-center text-gray-800 mb-8">
-              Meet Our Development Team
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {developers.map((dev, index) => (
-                <DeveloperCard key={index} {...dev} />
+          
+          {/* Footer Links Sections */}
+          <div className="lg:col-span-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+              {footerSections.map((section, index) => (
+                <div key={index}>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">{section.title}</h3>
+                  <ul className="space-y-2">
+                    {section.links.map((link, idx) => (
+                      <li key={idx}>
+                        <a 
+                          href={link.href} 
+                          className="text-gray-600 hover:text-orange-500 transition-colors block py-1"
+                        >
+                          {link.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
             </div>
           </div>
-
-          {/* Contact Section */}
-          <div className="text-center mb-12">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">
-              Get in Touch
-            </h3>
-            <div className="flex justify-center space-x-6">
-              <a
-                href="mailto:contact@webreich.com"
-                className="flex items-center text-gray-600 hover:text-orange-500 transition-colors"
+          
+          {/* Newsletter */}
+          <div className="lg:col-span-2">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Stay Updated</h3>
+            <p className="text-gray-600 mb-4">Subscribe to our newsletter for the latest news and insights.</p>
+            <form className="space-y-2">
+              <input
+                type="email"
+                placeholder="Your email address"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                required
+              />
+              <button 
+                type="submit"
+                className="w-full bg-orange-500 text-white font-medium py-2 px-4 rounded-md hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
               >
-                <FaEnvelope className="mr-2" />
-                contact@webreich.com
-              </a>
-              <a
-                href="https://instagram.com/webreich"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center text-gray-600 hover:text-orange-500 transition-colors"
-              >
-                <FaInstagram className="mr-2" />
-                @webreich
-              </a>
-            </div>
+                Subscribe
+              </button>
+            </form>
           </div>
-
-          {/* Bottom Bar */}
-          <div className="border-t border-orange-200 pt-6 mt-6">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-gray-600 text-sm mb-4 md:mb-0">
-                &copy; {new Date().getFullYear()} WebReich Community. All rights reserved.
-              </p>
-              <div className="flex items-center text-gray-600 text-sm">
-                Made with <FaHeart className="text-orange-500 mx-1" /> by WebReich Development Team
-              </div>
+        </div>
+      </div>
+      
+      {/* Bottom Bar */}
+      <div className="border-t border-gray-200">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-gray-600 text-sm mb-4 md:mb-0">
+              &copy; {currentYear} WebReich. All rights reserved.
+            </p>
+            
+            {/* Social Media Links */}
+            <div className="flex space-x-4">
+              {socialLinks.map((social, index) => (
+                <a
+                  key={index}
+                  href={social.href}
+                  aria-label={social.label}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-orange-500 transition-colors p-2"
+                >
+                  {social.icon}
+                </a>
+              ))}
             </div>
           </div>
         </div>

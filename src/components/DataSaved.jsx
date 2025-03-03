@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../db/firebase.js';
-import { ref, onValue, remove, update } from 'firebase/database';
+import { onValue, update, ref, remove } from 'firebase/database';
 import {
   FaArrowLeft, FaWhatsapp, FaInstagram, FaEnvelope, FaEdit,
   FaTrash, FaUserPlus, FaCheck, FaSearch, FaFilter, FaTimes,
   FaSave, FaPhoneAlt, FaMapMarkerAlt, FaMoneyBillWave, FaPaperPlane
 } from 'react-icons/fa';
 
-function ClientDataView() {
+function DataSaved() {
   const [clients, setClients] = useState([]);
   const [filteredClients, setFilteredClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,22 +74,51 @@ function ClientDataView() {
     setFilteredClients(result);
   }, [clients, searchTerm, filter]);
 
+  // const handleDeleteClient = async (id, e) => {
+  //   e.stopPropagation();
+  //   if (window.confirm("Are you sure you want to delete this client?")) {
+  //     try {
+  //       const clientRef = ref(database, `clients/${id}`);
+  //       await remove(clientRef);
+  //       if (selectedClient && selectedClient.id === id) {
+  //         closeClientDetails();
+  //       }
+  //     } catch (error) {
+  //       console.error("Error deleting client:", error);
+  //       alert("Error deleting client");
+  //     }
+  //   }
+  // };
+
   const handleDeleteClient = async (id, e) => {
     e.stopPropagation();
+    e.preventDefault(); // Adding this to prevent any default behavior
+    
     if (window.confirm("Are you sure you want to delete this client?")) {
       try {
+        // Ensure the path is correct - check your Firebase structure
         const clientRef = ref(database, `clients/${id}`);
         await remove(clientRef);
+        
+        // Check if the deleted client is currently selected
         if (selectedClient && selectedClient.id === id) {
           closeClientDetails();
         }
+        
+        // Notify parent component (if needed)
+        if (typeof onClientDelete === 'function') {
+          onClientDelete(id);
+        }
+        
+        console.log("Client successfully deleted!");
       } catch (error) {
         console.error("Error deleting client:", error);
-        alert("Error deleting client");
+        alert(`Error deleting client: ${error.message}`);
       }
     }
   };
 
+  
   const handleUpdateStatus = async (id, newStatus, e) => {
     e.stopPropagation();
     try {
@@ -248,23 +277,23 @@ function ClientDataView() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-500 to-amber-600 p-6 text-white">
+    <div className="">
+      <div className="">
+        <div className="bg-white shadow-2xl overflow-hidden">
+          <div className=" p-6 text-white">
             <div className="flex justify-between items-center">
               <button
                 onClick={() => navigate('/')}
                 className="bg-white text-orange-600 px-3 py-2 rounded-lg hover:bg-orange-100 transition-colors flex items-center shadow-md"
               >
-                <FaArrowLeft className="mr-2" /> Back
+                <FaArrowLeft className="mr-2" />
               </button>
-              <h1 className="text-3xl font-bold text-center">Client Database</h1>
+              <h1 className="text-2xl font-bold text-center text-gray-900">Client Database</h1>
               <button
                 onClick={() => navigate('/')}
                 className="bg-white text-orange-600 px-3 py-2 rounded-lg hover:bg-orange-100 transition-colors flex items-center shadow-md"
               >
-                <FaUserPlus className="mr-2" /> Add New
+                <FaUserPlus className="mr-2" />
               </button>
             </div>
           </div>
@@ -388,8 +417,8 @@ function ClientDataView() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${client.status === 'approach'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-800'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-green-100 text-green-800'
                             }`}>
                             {client.status === 'approach' ? 'Approach' : 'Confirmed'}
                           </span>
@@ -684,8 +713,8 @@ function ClientDataView() {
                               <h3 className="text-sm font-medium text-gray-500">Status</h3>
                               <p className="text-lg">
                                 <span className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${selectedClient.status === 'approach'
-                                    ? 'bg-yellow-100 text-yellow-800'
-                                    : 'bg-green-100 text-green-800'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-green-100 text-green-800'
                                   }`}>
                                   {selectedClient.status === 'approach' ? 'Approach' : 'Confirmed'}
                                 </span>
@@ -776,4 +805,4 @@ function ClientDataView() {
   );
 }
 
-export default ClientDataView;
+export default DataSaved;

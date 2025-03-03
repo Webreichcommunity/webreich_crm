@@ -215,13 +215,13 @@ Team Webreich`;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="">
+      <div className="">
         <div className="bg-white rounded-xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-500 to-amber-600 p-6 text-white">
+          {/* <div className="bg-gradient-to-r from-orange-500 to-amber-600 p-6 text-white">
             <h1 className="text-3xl font-bold text-center">Webreich CRM</h1>
             <p className="text-center mt-2 text-orange-100">Client Management System</p>
-          </div>
+          </div> */}
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Client Information Section */}
