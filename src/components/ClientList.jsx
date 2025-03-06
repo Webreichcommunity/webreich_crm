@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { database } from '../db/firebase.js';
 import { onValue, ref } from 'firebase/database';
 import * as XLSX from 'xlsx';
@@ -13,6 +13,7 @@ import {
   FaFilter,
   FaChartLine
 } from 'react-icons/fa';
+import { ScreenRotation } from '@mui/icons-material';
 
 function ClientList() {
   const [clients, setClients] = useState([]);
@@ -74,20 +75,20 @@ function ClientList() {
   // Calculate statistics
   const calculateStats = (clientsList) => {
     const today = new Date().toISOString().split('T')[0];
-    
-    const todayClients = clientsList.filter(client => 
+
+    const todayClients = clientsList.filter(client =>
       client.date && client.date.startsWith(today)
     );
-    
-    const approachClients = clientsList.filter(client => 
+
+    const approachClients = clientsList.filter(client =>
       client.status === 'approach'
     );
-    
-    const confirmedClients = clientsList.filter(client => 
+
+    const confirmedClients = clientsList.filter(client =>
       client.status === 'confirmed'
     );
-    
-    const respondedClients = clientsList.filter(client => 
+
+    const respondedClients = clientsList.filter(client =>
       client.response && client.response !== 'No response yet'
     );
 
@@ -111,11 +112,11 @@ function ClientList() {
 
     // Response filter
     if (responseFilter === 'responded') {
-      result = result.filter(client => 
+      result = result.filter(client =>
         client.response && client.response !== 'No response yet'
       );
     } else if (responseFilter === 'not-responded') {
-      result = result.filter(client => 
+      result = result.filter(client =>
         !client.response || client.response === 'No response yet'
       );
     }
@@ -124,7 +125,7 @@ function ClientList() {
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     const lastWeek = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
-    
+
     if (dateFilter === 'today') {
       result = result.filter(client => client.date && client.date.startsWith(today));
     } else if (dateFilter === 'yesterday') {
@@ -159,7 +160,7 @@ function ClientList() {
       Response: client.response || 'No response yet',
       Date: formatDate(client.date) || ''
     }));
-    
+
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Clients");
@@ -207,6 +208,13 @@ function ClientList() {
             >
               <FaFilter className="mr-2" /> Filters
             </button>
+            <Link to="/script">
+              <button
+                className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-4 py-2 rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition shadow-md flex items-center"
+              >
+                <ScreenRotation className="mr-2" /> Script
+              </button>
+            </Link>
           </div>
         </div>
 
@@ -223,7 +231,7 @@ function ClientList() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500 hover:shadow-lg transition">
             <div className="flex items-center justify-between">
               <div>
@@ -235,7 +243,7 @@ function ClientList() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-yellow-500 hover:shadow-lg transition">
             <div className="flex items-center justify-between">
               <div>
@@ -247,7 +255,7 @@ function ClientList() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-purple-500 hover:shadow-lg transition">
             <div className="flex items-center justify-between">
               <div>
@@ -259,7 +267,7 @@ function ClientList() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-pink-500 hover:shadow-lg transition">
             <div className="flex items-center justify-between">
               <div>
@@ -289,7 +297,7 @@ function ClientList() {
                   <option value="confirmed">Confirmed</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-gray-700 mb-2 font-medium">Response Filter</label>
                 <select
@@ -302,7 +310,7 @@ function ClientList() {
                   <option value="not-responded">Not Responded</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-gray-700 mb-2 font-medium">Date Filter</label>
                 <select
@@ -353,7 +361,7 @@ function ClientList() {
                 <FaSearch className="w-12 h-12 mx-auto" />
               </div>
               <p className="text-gray-500 text-lg">No clients found with the current filters</p>
-              <button 
+              <button
                 onClick={() => {
                   setSearchTerm('');
                   setStatusFilter('all');
@@ -381,8 +389,8 @@ function ClientList() {
                 </thead>
                 <tbody>
                   {filteredClients.map((client, index) => (
-                    <tr 
-                      key={client.id} 
+                    <tr
+                      key={client.id}
                       className={`border-b hover:bg-orange-50 transition ${index % 2 === 0 ? 'bg-white' : 'bg-orange-50/30'}`}
                     >
                       <td className="px-4 py-4">
@@ -390,7 +398,7 @@ function ClientList() {
                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center mr-3 text-white shadow-md">
                             {client.name ? client.name.charAt(0).toUpperCase() : '?'}
                           </div>
-                          <span 
+                          <span
                             className="font-medium text-gray-800 hover:text-orange-600 transition cursor-pointer"
                             onClick={() => navigate(`/client/${client.id}`)}
                           >
@@ -407,11 +415,10 @@ function ClientList() {
                       </td>
                       <td className="px-4 py-4">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            client.status === 'approach'
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${client.status === 'approach'
                               ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
                               : 'bg-green-100 text-green-800 border border-green-300'
-                          }`}
+                            }`}
                         >
                           {client.status === 'approach' ? 'Approach' : 'Confirmed'}
                         </span>
@@ -432,7 +439,7 @@ function ClientList() {
               </table>
             </div>
           )}
-          
+
           {/* Pagination or Results Summary */}
           <div className="p-4 border-t bg-orange-50 text-sm text-gray-600">
             Showing {filteredClients.length} of {clients.length} clients

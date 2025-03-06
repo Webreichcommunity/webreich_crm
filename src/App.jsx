@@ -5,6 +5,7 @@ import LoginForm from './components/LoginForm.';
 import ClientDetails from './components/ClientDetails';
 import AddClient from './components/AddClient';
 import ClientList from './components/ClientList';
+import ScriptPage from './components/ScriptPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -41,6 +42,7 @@ function App() {
             <Route index element={<ClientList />} />
             <Route path="client/:id" element={<ClientDetails />} />
             <Route path="add-client" element={<AddClient />} />
+            <Route path="script" element={<ScriptPage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Route>
         )}

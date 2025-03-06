@@ -63,16 +63,16 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-start">
                 <FaMapMarkerAlt className="text-orange-500 mt-1 mr-3 flex-shrink-0" />
-                <p className="text-gray-600">123 Business Avenue, Tech District, NY 10001</p>
+                <p className="text-gray-600">Akola, Maharashtra, India</p>
               </div>
               <div className="flex items-center">
                 <FaPhone className="text-orange-500 mr-3 flex-shrink-0" />
-                <p className="text-gray-600">+1 (555) 123-4567</p>
+                <p className="text-gray-600">+91-8668722207 / +91-9834153020 </p>
               </div>
               <div className="flex items-center">
                 <FaEnvelope className="text-orange-500 mr-3 flex-shrink-0" />
-                <a href="mailto:contact@webreich.com" className="text-gray-600 hover:text-orange-500 transition-colors">
-                  contact@webreich.com
+                <a href="mailto:webreichcommunity@gmail.com" className="text-gray-600 hover:text-orange-500 transition-colors">
+                  contact@WebreichTechnologies
                 </a>
               </div>
             </div>
