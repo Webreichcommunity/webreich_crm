@@ -42,6 +42,7 @@ const AddClient = () => {
   // Product options
   const PRODUCT_OPTIONS = [
     { value: 'orderqr', label: 'OrderQR for Hotels' },
+    { value: 'goldrate', label: 'Gold Live Rates' },
     { value: 'crm-normal', label: 'CRM Normal' },
     { value: 'civil-crm', label: 'Civil CRM' },
     { value: 'web-services', label: 'Web Services' },
