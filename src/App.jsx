@@ -10,21 +10,19 @@ import ReportsPage from './components/ReportsPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [pin, setPin] = useState('');
 
   useEffect(() => {
     const auth = localStorage.getItem('isAuthenticated');
-    if (auth) {
-      setIsAuthenticated(true);
-    }
+    if (auth) setIsAuthenticated(true);
   }, []);
 
   const handleLogin = (username, password) => {
-    // You might want to replace this with a more secure authentication method
-    if (username === 'webreich' && password === '1234') {
+    if (username === 'webreich' && password === '1234' && pin === '9113') {
       setIsAuthenticated(true);
       localStorage.setItem('isAuthenticated', 'true');
     } else {
-      alert('Invalid username or password');
+      alert('Invalid credentials or PIN');
     }
   };
 
@@ -37,7 +35,7 @@ function App() {
     <Router>
       <Routes>
         {!isAuthenticated ? (
-          <Route path="*" element={<LoginForm onLogin={handleLogin} />} />
+          <Route path="*" element={<LoginForm onLogin={handleLogin} pin={pin} setPin={setPin} />} />
         ) : (
           <Route path="/" element={<Layout onLogout={handleLogout} />}>
             <Route index element={<ProjectDashboard />} />
