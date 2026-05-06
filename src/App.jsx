@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import LoginForm from './components/LoginForm.';
-import ClientDetails from './components/ClientDetails';
-import AddClient from './components/AddClient';
-import ClientList from './components/ClientList';
-import ScriptPage from './components/ScriptPage';
+import ProjectDashboard from './components/ProjectDashboard';
+import ProjectForm from './components/ProjectForm';
+import ProjectDetails from './components/ProjectDetails';
+import FinancePage from './components/FinancePage';
+import ReportsPage from './components/ReportsPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -39,10 +40,11 @@ function App() {
           <Route path="*" element={<LoginForm onLogin={handleLogin} />} />
         ) : (
           <Route path="/" element={<Layout onLogout={handleLogout} />}>
-            <Route index element={<ClientList />} />
-            <Route path="client/:id" element={<ClientDetails />} />
-            <Route path="add-client" element={<AddClient />} />
-            <Route path="script" element={<ScriptPage />} />
+            <Route index element={<ProjectDashboard />} />
+            <Route path="projects/new" element={<ProjectForm />} />
+            <Route path="projects/:id" element={<ProjectDetails />} />
+            <Route path="finance" element={<FinancePage />} />
+            <Route path="reports" element={<ReportsPage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Route>
         )}
