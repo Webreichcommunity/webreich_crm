@@ -1,152 +1,135 @@
 import React from 'react';
-import { FaGithub, FaLinkedin, FaTwitter, FaInstagram, 
-         FaEnvelope, FaMapMarkerAlt, FaPhone } from 'react-icons/fa';
+import { Link, useLocation } from 'react-router-dom';
+import { FaEnvelope, FaGithub, FaInstagram, FaLinkedin, FaMapMarkerAlt, FaPhone, FaTwitter } from 'react-icons/fa';
 
 const Footer = () => {
-  const currentYear = new Date().getFullYear();
-  
-  // Company social links
-  const socialLinks = [
-    { icon: <FaTwitter />, href: "https://twitter.com/webreich", label: "Twitter" },
-    { icon: <FaGithub />, href: "https://github.com/webreich", label: "GitHub" },
-    { icon: <FaLinkedin />, href: "https://linkedin.com/company/webreich", label: "LinkedIn" },
-    { icon: <FaInstagram />, href: "https://instagram.com/webreich", label: "Instagram" }
+  const year = new Date().getFullYear();
+  const location = useLocation();
+
+  const nav = [
+    { name: 'Dashboard', to: '/' },
+    { name: 'Finance', to: '/finance' },
+    { name: 'Reports', to: '/reports' },
+    { name: 'Scripts', to: '/scripts' },
   ];
 
-  // Footer links sections
-  const footerSections = [
-    {
-      title: "Company",
-      links: [
-        { name: "About Us", href: "/about" },
-        { name: "Our Team", href: "/team" },
-        { name: "Careers", href: "/careers" },
-        { name: "News", href: "/news" }
-      ]
-    },
-    {
-      title: "Services",
-      links: [
-        { name: "Web Development", href: "/services/web-development" },
-        { name: "Mobile Apps", href: "/services/mobile-apps" },
-        { name: "UI/UX Design", href: "/services/design" },
-        { name: "Consulting", href: "/services/consulting" }
-      ]
-    },
-    {
-      title: "Resources",
-      links: [
-        { name: "Blog", href: "/blog" },
-        { name: "Documentation", href: "/docs" },
-        { name: "Case Studies", href: "/case-studies" },
-        { name: "FAQs", href: "/faqs" }
-      ]
-    }
+  const socials = [
+    { icon: <FaTwitter />, href: 'https://twitter.com/webreich', label: 'Twitter' },
+    { icon: <FaGithub />, href: 'https://github.com/webreich', label: 'GitHub' },
+    { icon: <FaLinkedin />, href: 'https://linkedin.com/company/webreich', label: 'LinkedIn' },
+    { icon: <FaInstagram />, href: 'https://instagram.com/webreich', label: 'Instagram' },
   ];
 
   return (
-    <footer className="bg-gradient-to-b from-gray-50 to-gray-100">
-      {/* Main Footer Content */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Company Info */}
-          <div className="lg:col-span-4">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">WebReich</h2>
-              <div className="w-12 h-1 bg-orange-500 mt-2 mb-4"></div>
-              <p className="text-gray-600 mb-6">
-                Empowering businesses with innovative digital solutions that drive growth and transformation.
+    <footer className=" bg-slate-950/95 backdrop-blur-xl border-t border-white/[0.06]">
+    
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
+          <div className="md:col-span-5">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/[0.08] flex items-center justify-center shadow-lg shadow-black/20">
+                <img
+                  src="/logo.png"
+                  alt="WebReich"
+                  className="h-6 w-6 object-contain brightness-0 invert opacity-90"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white leading-none">WebReich CRM</h2>
+                <p className="text-[11px] text-orange-400/80 font-semibold tracking-wider uppercase mt-0.5">
+                  Operations • Finance • Reports
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-slate-400 leading-relaxed mt-5 max-w-md">
+              A focused CRM workspace for managing projects, tracking payments, generating reports, and using ready-to-send client scripts.
+            </p>
+
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center gap-3 text-sm text-slate-300">
+                <span className="h-9 w-9 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                  <FaMapMarkerAlt className="text-orange-400 text-sm" />
+                </span>
+                <span>Akola, Maharashtra, India</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-slate-300">
+                <span className="h-9 w-9 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                  <FaPhone className="text-orange-400 text-sm" />
+                </span>
+                <span>+91-8668722207 / +91-9834153020</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-slate-300">
+                <span className="h-9 w-9 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                  <FaEnvelope className="text-orange-400 text-sm" />
+                </span>
+                <span>webreichcommunity@gmail.com</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="md:col-span-4">
+            <h3 className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-4">Quick Links</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {nav.map((item) => {
+                const active = location.pathname === item.to;
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={`px-3 py-2 rounded-xl border text-sm transition ${
+                      active
+                        ? 'bg-white/[0.06] border-orange-500/20 text-white'
+                        : 'bg-white/[0.03] border-white/[0.06] text-slate-300 hover:bg-white/[0.06] hover:text-white'
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 rounded-2xl p-4 bg-white/[0.03] backdrop-blur-xl border border-white/[0.08]">
+              <p className="text-xs font-semibold text-slate-200 uppercase tracking-wider">Security</p>
+              <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+                You stay signed in until logout. The app lock PIN is required after reopening the app.
               </p>
             </div>
-            
-            {/* Contact Information */}
-            <div className="space-y-3">
-              <div className="flex items-start">
-                <FaMapMarkerAlt className="text-orange-500 mt-1 mr-3 flex-shrink-0" />
-                <p className="text-gray-600">Akola, Maharashtra, India</p>
-              </div>
-              <div className="flex items-center">
-                <FaPhone className="text-orange-500 mr-3 flex-shrink-0" />
-                <p className="text-gray-600">+91-8668722207 / +91-9834153020 </p>
-              </div>
-              <div className="flex items-center">
-                <FaEnvelope className="text-orange-500 mr-3 flex-shrink-0" />
-                <a href="mailto:webreichcommunity@gmail.com" className="text-gray-600 hover:text-orange-500 transition-colors">
-                  contact@WebreichTechnologies
-                </a>
-              </div>
-            </div>
           </div>
-          
-          {/* Footer Links Sections */}
-          <div className="lg:col-span-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-              {footerSections.map((section, index) => (
-                <div key={index}>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">{section.title}</h3>
-                  <ul className="space-y-2">
-                    {section.links.map((link, idx) => (
-                      <li key={idx}>
-                        <a 
-                          href={link.href} 
-                          className="text-gray-600 hover:text-orange-500 transition-colors block py-1"
-                        >
-                          {link.name}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Newsletter */}
-          <div className="lg:col-span-2">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Stay Updated</h3>
-            <p className="text-gray-600 mb-4">Subscribe to our newsletter for the latest news and insights.</p>
-            <form className="space-y-2">
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
-                required
-              />
-              <button 
-                type="submit"
-                className="w-full bg-orange-500 text-white font-medium py-2 px-4 rounded-md hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
-              >
-                Subscribe
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-      
-      {/* Bottom Bar */}
-      <div className="border-t border-gray-200">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-600 text-sm mb-4 md:mb-0">
-              &copy; {currentYear} WebReich. All rights reserved.
-            </p>
-            
-            {/* Social Media Links */}
-            <div className="flex space-x-4">
-              {socialLinks.map((social, index) => (
+
+          <div className="md:col-span-3">
+            <h3 className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-4">Social</h3>
+            <div className="flex items-center gap-2">
+              {socials.map((s) => (
                 <a
-                  key={index}
-                  href={social.href}
-                  aria-label={social.label}
+                  key={s.label}
+                  href={s.href}
+                  aria-label={s.label}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-orange-500 transition-colors p-2"
+                  className="group relative w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:text-orange-300 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition"
                 >
-                  {social.icon}
+                  <span className="relative z-10 transform group-hover:scale-110 transition-transform">{s.icon}</span>
                 </a>
               ))}
             </div>
+
+            <div className="mt-6 p-4 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/[0.06]">
+              <p className="text-xs font-semibold text-slate-200 uppercase tracking-wider">Tip</p>
+              <p className="text-sm text-slate-400 mt-2">
+                Use Finance filters + export, then validate in Reports for month-wise performance.
+              </p>
+            </div>
           </div>
+        </div>
+
+        <div className="mt-10 pt-6 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-slate-500">© {year} WebReich CRM. All rights reserved.</p>
+          <p className="text-xs text-slate-500">Designed for fast, mobile-friendly workflows.</p>
         </div>
       </div>
     </footer>
@@ -154,3 +137,4 @@ const Footer = () => {
 };
 
 export default Footer;
+

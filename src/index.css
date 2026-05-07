@@ -1,3 +1,49 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-slate-50 via-white to-orange-50/40 text-slate-900 overflow-x-hidden;
+  }
+}
+
+@layer components {
+  .wr-glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/50 shadow-[0_1px_0_rgba(255,255,255,0.7),0_12px_30px_rgba(15,23,42,0.08)];
+  }
+
+  .wr-card {
+    @apply wr-glass rounded-2xl;
+  }
+
+  .wr-page {
+    @apply relative min-h-screen;
+  }
+
+  .wr-container {
+    @apply max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8;
+  }
+
+  .wr-page-header {
+    @apply wr-card p-4 sm:p-5 md:p-6 mb-5;
+  }
+
+  .wr-title {
+    @apply text-2xl sm:text-3xl font-bold tracking-tight text-slate-900;
+  }
+
+  .wr-subtitle {
+    @apply text-sm text-slate-500 mt-1;
+  }
+
+  .wr-chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-orange-100 bg-orange-50 text-orange-700 text-xs font-semibold;
+  }
+}

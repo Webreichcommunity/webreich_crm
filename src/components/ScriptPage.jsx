@@ -18,8 +18,6 @@ import {
     FaUserAlt,
     FaSms
 } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
-import { FaArrowLeft } from 'react-icons/fa';
 
 function ScriptPage() {
     const [scripts, setScripts] = useState([]);
@@ -42,12 +40,30 @@ function ScriptPage() {
     const [selectedScriptForClient, setSelectedScriptForClient] = useState({});
     const [sendingMessage, setSendingMessage] = useState(false);
     const [messageSent, setMessageSent] = useState({});
+    const [activeTab, setActiveTab] = useState('scripts'); // scripts | clients
+    const [toast, setToast] = useState(null); // { message, type }
+    const [scriptLanguageFilter, setScriptLanguageFilter] = useState('all'); // all | english | hindi
 
     // Languages available
     const languages = [
         { id: 'english', name: 'English' },
         { id: 'hindi', name: 'Hindi' }
     ];
+
+    const applyTemplate = (text, client) => {
+        const safeText = String(text || '');
+        const tokens = {
+            name: client?.name || '',
+            mobile: client?.mobile || '',
+            phone: client?.mobile || '',
+            business: client?.business || client?.company || '',
+        };
+
+        return safeText.replace(/\{\{\s*(name|mobile|phone|business)\s*\}\}/gi, (_, key) => {
+            const v = tokens[String(key).toLowerCase()];
+            return v ?? '';
+        });
+    };
 
     // Fetch scripts from Firebase
     useEffect(() => {
@@ -144,7 +160,7 @@ function ScriptPage() {
                 .then(() => {
                     resetForm();
                     // Show success notification
-                    showNotification('Script updated successfully!');
+                    showToast('Script updated successfully!', 'success');
                 })
                 .catch((error) => {
                     console.error("Error updating script:", error);
@@ -164,7 +180,7 @@ function ScriptPage() {
                 .then(() => {
                     resetForm();
                     // Show success notification
-                    showNotification('Script saved successfully!');
+                    showToast('Script saved successfully!', 'success');
                 })
                 .catch((error) => {
                     console.error("Error saving script:", error);
@@ -203,7 +219,7 @@ function ScriptPage() {
         remove(scriptRef)
             .then(() => {
                 setDeleteConfirmation({ show: false, id: null });
-                showNotification('Script deleted successfully!');
+                showToast('Script deleted successfully!', 'success');
             })
             .catch((error) => {
                 console.error("Error deleting script:", error);
@@ -211,26 +227,27 @@ function ScriptPage() {
             });
     };
 
-    // Temporary notification system
-    const showNotification = (message) => {
-        const notification = document.createElement('div');
-        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fadeIn';
-        notification.innerText = message;
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.classList.add('animate-fadeOut');
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 500);
-        }, 3000);
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        window.clearTimeout(showToast._t);
+        showToast._t = window.setTimeout(() => setToast(null), 2800);
     };
 
     // Filter scripts based on search term
-    const filteredScripts = scripts.filter(script => {
-        const searchField = script.serviceName || script.businessType; // For backward compatibility
-        return searchField.toLowerCase().includes(scriptSearchTerm.toLowerCase());
-    });
+    const filteredScripts = scripts
+        .filter((script) => {
+            if (scriptLanguageFilter === 'all') return true;
+            return (script.language || 'english') === scriptLanguageFilter;
+        })
+        .filter((script) => {
+            const searchField = script.serviceName || script.businessType || ''; // For backward compatibility
+            const term = scriptSearchTerm.toLowerCase().trim();
+            if (!term) return true;
+            return (
+                searchField.toLowerCase().includes(term) ||
+                (script.messageScript || '').toLowerCase().includes(term)
+            );
+        });
 
     // Filter clients based on search term
     const filteredClients = clients.filter(client => {
@@ -260,7 +277,7 @@ function ScriptPage() {
     const copyToClipboard = (text, e) => {
         e.stopPropagation();
         navigator.clipboard.writeText(text).then(() => {
-            showNotification('Copied to clipboard!');
+            showToast('Copied to clipboard!', 'success');
         }).catch(err => {
             console.error('Failed to copy:', err);
         });
@@ -275,16 +292,17 @@ function ScriptPage() {
     };
 
     // Send WhatsApp message
-    const sendWhatsAppMessage = (clientId, phone) => {
+    const sendWhatsAppMessage = (client, phone) => {
+        const clientId = client?.id;
         const scriptId = selectedScriptForClient[clientId];
         if (!scriptId) {
-            showNotification('Please select a script first!');
+            showToast('Please select a script first!', 'warning');
             return;
         }
 
         const script = scripts.find(s => s.id === scriptId);
         if (!script) {
-            showNotification('Selected script not found!');
+            showToast('Selected script not found!', 'warning');
             return;
         }
 
@@ -293,7 +311,7 @@ function ScriptPage() {
 
         // Check if the phone number is valid
         if (!formattedPhone || formattedPhone.length < 10) {
-            showNotification('Invalid phone number!');
+            showToast('Invalid phone number!', 'warning');
             return;
         }
 
@@ -307,7 +325,8 @@ function ScriptPage() {
         }));
 
         // Use WhatsApp API to send message
-        const message = encodeURIComponent(script.messageScript);
+        const messageText = applyTemplate(script.messageScript, client);
+        const message = encodeURIComponent(messageText);
         const whatsappUrl = `https://wa.me/${formattedPhone}?text=${message}`;
 
         // Open WhatsApp in a new tab
@@ -328,55 +347,90 @@ function ScriptPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-100 p-3 md:p-5">
-            <div className="container mx-auto max-w-4xl">
-                <Link
-                    to="/"
-                    className="inline-flex items-center px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-lg hover:from-orange-600 hover:to-amber-700 transition shadow-md mb-4 text-sm"
-                >
-                    <FaArrowLeft className="mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
-                    <span>Back</span>
-                </Link>
-
-                {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-                    <h1 className="text-2xl font-bold text-orange-700 mb-3 md:mb-0">Message Scripts</h1>
-                    <button
-                        onClick={() => {
-                            if (showForm && isEditing) {
-                                resetForm();
-                            } else {
-                                setShowForm(!showForm);
-                            }
-                        }}
-                        className={`${showForm
-                            ? 'bg-red-500 hover:bg-red-600'
-                            : 'bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700'
-                            } text-white px-3 py-2 rounded-lg transition shadow-md flex items-center text-sm`}
+        <div className="wr-page">
+            {toast && (
+                <div className="fixed top-16 right-3 sm:right-6 z-50">
+                    <div
+                        className={`px-4 py-3 rounded-xl text-sm font-semibold shadow-lg border backdrop-blur-xl ${toast.type === 'warning'
+                            ? 'bg-amber-500/90 text-white border-amber-300/30'
+                            : 'bg-emerald-600/90 text-white border-emerald-300/30'
+                            }`}
+                        role="status"
                     >
-                        {showForm ? (
-                            <>
-                                <FaTimes className="mr-1" /> Cancel
-                            </>
-                        ) : (
-                            <>
-                                <FaPlus className="mr-1" /> Add New Script
-                            </>
-                        )}
-                    </button>
+                        {toast.message}
+                    </div>
+                </div>
+            )}
+
+            <div className="wr-container py-4 md:py-6">
+                {/* Header */}
+                <div className="wr-card p-4 sm:p-5 mb-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Scripts</h1>
+                            <p className="text-sm text-slate-500 mt-1">
+                                Save reusable WhatsApp scripts and send them to clients fast.
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                if (showForm && isEditing) resetForm();
+                                else setShowForm(!showForm);
+                            }}
+                            className={`${showForm
+                                ? 'bg-rose-600 hover:bg-rose-700'
+                                : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
+                                } text-white px-4 py-2.5 rounded-xl transition shadow-md shadow-orange-200/40 flex items-center justify-center text-sm font-semibold w-full sm:w-auto`}
+                        >
+                            {showForm ? (
+                                <>
+                                    <FaTimes className="mr-2" /> Cancel
+                                </>
+                            ) : (
+                                <>
+                                    <FaPlus className="mr-2" /> Add Script
+                                </>
+                            )}
+                        </button>
+                    </div>
+
+                    {/* Tabs */}
+                    <div className="mt-4 flex items-center gap-2 bg-white/60 border border-white/70 rounded-2xl p-1 overflow-x-auto">
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('scripts')}
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition ${activeTab === 'scripts'
+                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/70'
+                                }`}
+                        >
+                            Message Scripts ({filteredScripts.length})
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('clients')}
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition ${activeTab === 'clients'
+                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/70'
+                                }`}
+                        >
+                            Client Messages ({filteredClients.length})
+                        </button>
+                    </div>
                 </div>
 
                 {/* Add/Edit Script Form */}
                 {showForm && (
-                    <div className="bg-white rounded-xl shadow-lg mb-6 p-4 border border-orange-200 animate-fadeIn">
-                        <h2 className="text-lg font-semibold text-orange-600 mb-3 flex items-center">
+                    <div className="wr-card mb-5 p-4 sm:p-5 border border-orange-200/40">
+                        <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center">
                             {isEditing ? (
                                 <>
-                                    <FaEdit className="mr-2" /> Edit Script
+                                    <FaEdit className="mr-2 text-orange-500" /> Edit Script
                                 </>
                             ) : (
                                 <>
-                                    <FaPlus className="mr-2" /> Add New Script
+                                    <FaPlus className="mr-2 text-orange-500" /> Add New Script
                                 </>
                             )}
                         </h2>
@@ -426,6 +480,10 @@ function ScriptPage() {
                                     <label className="block text-gray-700 font-medium mb-1 flex items-center text-sm">
                                         <FaSms className="mr-2 text-orange-500" /> Message Script*
                                     </label>
+                                    <p className="text-[11px] text-slate-500 mb-2">
+                                        Tip: Use placeholders like <span className="font-semibold">{'{{name}}'}</span> and{' '}
+                                        <span className="font-semibold">{'{{mobile}}'}</span> to auto-fill client details.
+                                    </p>
                                     <textarea
                                         name="messageScript"
                                         value={formData.messageScript}
@@ -450,48 +508,53 @@ function ScriptPage() {
                     </div>
                 )}
 
-                {/* Scripts and Clients Tabs */}
-                <div className="mb-5">
-                    <ul className="flex bg-white rounded-lg p-1 shadow-md">
-                        <li className="flex-1">
-                            <button
-                                className="w-full py-2 px-4 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-lg font-medium"
-                                onClick={() => document.getElementById('scriptsSection').scrollIntoView({ behavior: 'smooth' })}
-                            >
-                                Message Scripts
-                            </button>
-                        </li>
-                        <li className="flex-1">
-                            <button
-                                className="w-full py-2 px-4 text-orange-700 hover:bg-orange-50 rounded-lg font-medium"
-                                onClick={() => document.getElementById('clientsSection').scrollIntoView({ behavior: 'smooth' })}
-                            >
-                                Client Messages
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-
                 {/* Scripts Section */}
-                <div id="scriptsSection" className="mb-8">
-                    <div className="bg-white rounded-lg shadow-md p-3 mb-4">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Search scripts by service name..."
-                                value={scriptSearchTerm}
-                                onChange={(e) => setScriptSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50 text-sm"
-                            />
-                            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-400" />
-                            {scriptSearchTerm && (
-                                <FaTimes
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-orange-400 cursor-pointer"
-                                    onClick={() => setScriptSearchTerm('')}
-                                />
-                            )}
+                {activeTab === 'scripts' && (
+                    <div className="mb-8">
+                        <div className="wr-card p-3 sm:p-4 mb-4">
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <div className="relative flex-1">
+                                    <input
+                                        type="text"
+                                        placeholder="Search scripts by service name or text..."
+                                        value={scriptSearchTerm}
+                                        onChange={(e) => setScriptSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-10 py-2.5 bg-white/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 text-sm"
+                                    />
+                                    <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    {scriptSearchTerm && (
+                                        <button
+                                            type="button"
+                                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                                            onClick={() => setScriptSearchTerm('')}
+                                            aria-label="Clear search"
+                                        >
+                                            <FaTimes />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="sm:w-52">
+                                    <div className="relative">
+                                        <select
+                                            value={scriptLanguageFilter}
+                                            onChange={(e) => setScriptLanguageFilter(e.target.value)}
+                                            className="w-full appearance-none px-3 py-2.5 pr-9 bg-white/70 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300"
+                                        >
+                                            <option value="all">All Languages</option>
+                                            {languages.map((lang) => (
+                                                <option key={lang.id} value={lang.id}>
+                                                    {lang.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                            <FaChevronDown />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
                     {/* Script List */}
                     {loading ? (
@@ -567,7 +630,7 @@ function ScriptPage() {
                                         </div>
 
                                         {expandedScripts[script.id] && (
-                                            <div className="p-3 border-t border-orange-100 animate-fadeIn">
+                                            <div className="p-3 border-t border-orange-100">
                                                 <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
                                                     <div className="flex justify-between items-center mb-2">
                                                         <h4 className="font-medium text-amber-700 flex items-center text-sm">
@@ -592,27 +655,40 @@ function ScriptPage() {
                             })}
                         </div>
                     )}
-                </div>
+                    </div>
+                )}
 
                 {/* Clients Section */}
-                <div id="clientsSection" className="mb-8">
-                    <h2 className="text-xl font-bold text-orange-700 mb-3">Client Messages</h2>
+                {activeTab === 'clients' && (
+                <div className="mb-8">
+                    <div className="wr-card p-4 sm:p-5 mb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-900">Client Messages</h2>
+                                <p className="text-sm text-slate-500 mt-0.5">Pick a script and send/copy it for any client.</p>
+                            </div>
+                        </div>
+                    </div>
 
-                    <div className="bg-white rounded-lg shadow-md p-3 mb-4">
+                    <div className="wr-card p-3 sm:p-4 mb-4">
                         <div className="relative">
                             <input
                                 type="text"
                                 placeholder="Search clients by name or mobile..."
                                 value={clientSearchTerm}
                                 onChange={(e) => setClientSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50 text-sm"
+                                className="w-full pl-10 pr-10 py-2.5 bg-white/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 text-sm"
                             />
-                            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-400" />
+                            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                             {clientSearchTerm && (
-                                <FaTimes
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-orange-400 cursor-pointer"
+                                <button
+                                    type="button"
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
                                     onClick={() => setClientSearchTerm('')}
-                                />
+                                    aria-label="Clear search"
+                                >
+                                    <FaTimes />
+                                </button>
                             )}
                         </div>
                     </div>
@@ -666,7 +742,7 @@ function ScriptPage() {
                                     </div>
 
                                     {expandedClients[client.id] && (
-                                        <div className="p-3 border-t border-orange-100 animate-fadeIn">
+                                        <div className="p-3 border-t border-orange-100">
                                             <div className="flex flex-col space-y-3">
                                                 <div className="relative">
                                                     <label className="block text-gray-700 font-medium mb-1 text-sm">Select Script</label>
@@ -691,14 +767,21 @@ function ScriptPage() {
                                                     <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
                                                         <h4 className="font-medium text-sm mb-2">Preview:</h4>
                                                         <p className="text-sm text-gray-600 whitespace-pre-line">
-                                                            {scripts.find(s => s.id === selectedScriptForClient[client.id])?.messageScript}
+                                                            {applyTemplate(
+                                                                scripts.find(s => s.id === selectedScriptForClient[client.id])?.messageScript,
+                                                                client
+                                                            )}
+                                                        </p>
+                                                        <p className="text-[11px] text-orange-700 mt-3">
+                                                            Placeholders: <span className="font-semibold">{'{{name}}'}</span>,{' '}
+                                                            <span className="font-semibold">{'{{mobile}}'}</span>
                                                         </p>
                                                     </div>
                                                 )}
 
                                                 <div className="flex flex-wrap gap-2">
                                                     <button
-                                                        onClick={() => sendWhatsAppMessage(client.id, client.mobile)}
+                                                        onClick={() => sendWhatsAppMessage(client, client.mobile)}
                                                         disabled={!selectedScriptForClient[client.id] || sendingMessage}
                                                         className={`${selectedScriptForClient[client.id]
                                                             ? 'bg-green-500 hover:bg-green-600'
@@ -712,12 +795,12 @@ function ScriptPage() {
                                                     <button
                                                         onClick={() => {
                                                             if (!selectedScriptForClient[client.id]) {
-                                                                showNotification('Please select a script first!');
+                                                                showToast('Please select a script first!', 'warning');
                                                                 return;
                                                             }
                                                             const script = scripts.find(s => s.id === selectedScriptForClient[client.id]);
                                                             if (script) {
-                                                                copyToClipboard(script.messageScript, new Event('click'));
+                                                                copyToClipboard(applyTemplate(script.messageScript, client), new Event('click'));
                                                             }
                                                         }}
                                                         className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg transition flex items-center text-sm"
@@ -733,6 +816,7 @@ function ScriptPage() {
                         </div>
                     )}
                 </div>
+                )}
 
                 {/* Delete Confirmation Modal */}
                 {deleteConfirmation.show && (
