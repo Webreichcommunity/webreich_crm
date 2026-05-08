@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { onValue, push, ref } from 'firebase/database';
+import { onValue, push, ref, set, remove } from 'firebase/database';
 import { database } from '../db/firebase';
 import { formatINR, getMonthKey } from './projectUtils';
 import * as XLSX from 'xlsx';
@@ -8,7 +8,7 @@ import {
   FiFilter, FiX, FiChevronDown, FiChevronUp, FiPieChart,
   FiBarChart2, FiActivity, FiPackage, FiUser, FiCreditCard,
   FiLayers, FiGrid, FiSearch, FiShield, FiArrowUp, FiArrowDown,
-  FiClock, FiCheckCircle, FiAlertCircle
+  FiClock, FiCheckCircle, FiAlertCircle, FiTrash2, FiEdit3
 } from 'react-icons/fi';
 
 export default function FinancePage() {
@@ -26,6 +26,7 @@ export default function FinancePage() {
   const [sortDirection, setSortDirection] = useState('desc');
   const [activeView, setActiveView] = useState('table');
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const FILTERS_KEY = 'wrcrm_finance_filters_v1';
   const [entry, setEntry] = useState({
     projectName: '', businessName: '', clientName: '', product: '',
@@ -60,7 +61,11 @@ export default function FinancePage() {
     setIsLoading(true);
     const unsub1 = onValue(ref(database, 'projects'), (s) => {
       const val = s.val() || {};
-      setProjects(Object.values(val));
+      const projectsWithIds = Object.entries(val).map(([id, data]) => ({
+        id,
+        ...data
+      }));
+      setProjects(projectsWithIds);
       setIsLoading(false);
     });
     return () => unsub1();
@@ -68,7 +73,12 @@ export default function FinancePage() {
 
   useEffect(() => {
     const unsub2 = onValue(ref(database, 'manualFinance'), (s) => {
-      setManual(Object.values(s.val() || {}));
+      const val = s.val() || {};
+      const manualWithIds = Object.entries(val).map(([id, data]) => ({
+        id,
+        ...data
+      }));
+      setManual(manualWithIds);
     });
     return () => unsub2();
   }, []);
@@ -87,7 +97,10 @@ export default function FinancePage() {
   );
 
   const rows = useMemo(() => [
-    ...projects.flatMap(p => (p.payments || []).map(pay => ({
+    ...projects.flatMap(p => (p.payments || []).map((pay, idx) => ({
+      id: `${p.id}_${idx}`,
+      projectId: p.id,
+      paymentIndex: idx,
       projectName: p.projectName,
       businessName: p.projectName,
       clientName: p.clientName,
@@ -100,6 +113,7 @@ export default function FinancePage() {
       source: 'project'
     }))),
     ...manual.map(m => ({
+      id: m.id,
       projectName: m.projectName,
       businessName: m.businessName,
       clientName: m.clientName,
@@ -224,6 +238,26 @@ export default function FinancePage() {
     await push(ref(database, 'manualFinance'), entry);
     setEntry({ ...entry, earning: '', projectName: '', businessName: '', clientName: '', product: '' });
     setShowAddForm(false);
+  };
+
+  const deleteEntry = async (row) => {
+    try {
+      if (row.source === 'manual') {
+        // Delete manual entry
+        await remove(ref(database, `manualFinance/${row.id}`));
+      } else if (row.source === 'project') {
+        // Delete project payment
+        const project = projects.find(p => p.id === row.projectId);
+        if (project) {
+          const updatedPayments = (project.payments || []).filter((_, idx) => idx !== row.paymentIndex);
+          await set(ref(database, `projects/${row.projectId}/payments`), updatedPayments);
+        }
+      }
+      setDeleteConfirm(null);
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+      alert('Failed to delete entry. Please try again.');
+    }
   };
 
   const exportExcel = () => {
@@ -585,7 +619,7 @@ export default function FinancePage() {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {filtered.map((r, i) => (
-                      <tr key={i} className="group hover:bg-gray-50/50 transition-colors duration-150">
+                      <tr key={r.id || i} className="group hover:bg-gray-50/50 transition-colors duration-150">
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-1.5 text-xs text-gray-500">
                             <FiCalendar className="h-3 w-3" />
@@ -621,11 +655,20 @@ export default function FinancePage() {
                           <span className="text-sm font-bold text-emerald-600">{formatINR(r.amount)}</span>
                         </td>
                         <td className="px-3 py-3">
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                            r.source === 'manual' ? 'bg-violet-50 text-violet-600' : 'bg-emerald-50 text-emerald-600'
-                          }`}>
-                            {r.source === 'manual' ? 'Manual' : 'Project'}
-                          </span>
+                          <div className="flex items-center gap-1">
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              r.source === 'manual' ? 'bg-violet-50 text-violet-600' : 'bg-emerald-50 text-emerald-600'
+                            }`}>
+                              {r.source === 'manual' ? 'Manual' : 'Project'}
+                            </span>
+                            <button
+                              onClick={() => setDeleteConfirm(r)}
+                              className="p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                              title="Delete entry"
+                            >
+                              <FiTrash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -722,6 +765,67 @@ export default function FinancePage() {
                 Add Entry
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
+          
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-100 p-6">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-red-50 mb-4">
+                <FiAlertCircle className="h-8 w-8 text-red-500" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Payment Entry?</h3>
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete this payment entry? This action cannot be undone.
+              </p>
+              <div className="mt-4 p-4 bg-gray-50 rounded-xl text-left">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Project:</span>
+                    <span className="font-medium text-gray-900">{deleteConfirm.projectName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Client:</span>
+                    <span className="font-medium text-gray-900">{deleteConfirm.clientName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Amount:</span>
+                    <span className="font-bold text-red-600">{formatINR(deleteConfirm.amount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Date:</span>
+                    <span className="font-medium text-gray-900">
+                      {new Date(deleteConfirm.date).toLocaleDateString('en-IN', { 
+                        day: 'numeric', month: 'long', year: 'numeric' 
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl
+                  hover:bg-gray-200 transition-all duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteEntry(deleteConfirm)}
+                className="flex-1 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 rounded-xl
+                  hover:from-red-600 hover:to-red-700 shadow-md shadow-red-200/50 transition-all duration-300
+                  flex items-center justify-center gap-2"
+              >
+                <FiTrash2 className="h-4 w-4" />
+                Delete Entry
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -7,14 +7,53 @@ export const formatINR = (value = 0) => `₹${Number(value || 0).toLocaleString(
 
 export const getMonthKey = (date) => new Date(date).toISOString().slice(0, 7);
 
-export const buildSerial = ({ product, date, normalCounter, goldCounter }) => {
+export const buildSerial = ({ product, date, projects = [] }) => {
   const productLower = (product || '').toLowerCase();
+
+  // GOLD special case (unchanged)
   if (productLower.includes('gold rate board')) {
-    return `WR-GOLD-${String(goldCounter).padStart(3, '0')}`;
+    const goldProjects = projects.filter(p =>
+      (p.product || '').toLowerCase().includes('gold rate board')
+    );
+
+    const used = goldProjects.map(p => {
+      const parts = p.serialNumber?.split('-');
+      return parts ? parseInt(parts[2], 10) : null;
+    }).filter(Boolean);
+
+    let seq = 1;
+    while (used.includes(seq)) seq++;
+
+    return `WR-GOLD-${String(seq).padStart(3, '0')}`;
   }
+
+  // NORMAL PROJECT SERIAL LOGIC
   const d = new Date(date);
   const dd = String(d.getDate()).padStart(2, '0');
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const yy = String(d.getFullYear()).slice(-2);
-  return `WR-${dd}${mm}${yy}-${normalCounter}`;
+
+  const dateKey = d.toDateString();
+
+  // Filter projects of SAME DATE
+  const sameDateProjects = projects.filter(p => {
+    const pDate = new Date(p.createdAt);
+    return pDate.toDateString() === dateKey;
+  });
+
+  // Extract used sequence numbers
+  const usedNumbers = sameDateProjects.map(p => {
+    const parts = p.serialNumber?.split('-');
+    return parts ? parseInt(parts[2], 10) : null;
+  }).filter(Boolean);
+
+  // Find smallest missing number (IMPORTANT)
+  let sequence = 1;
+  while (usedNumbers.includes(sequence)) {
+    sequence++;
+  }
+
+  const formattedSequence = String(sequence).padStart(2, '0');
+
+  return `WR-${dd}${mm}${yy}-${formattedSequence}`;
 };

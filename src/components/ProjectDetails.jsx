@@ -1,13 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { get, ref, remove, update } from 'firebase/database';
 import { database } from '../db/firebase';
 import { DEFAULT_MEETING_TYPES, DEFAULT_PAYMENT_MODES, formatINR } from './projectUtils';
+import { downloadProjectInvoicePdf } from './invoiceUtils';
 import { 
   FiArrowLeft, FiSave, FiTrash2, FiDollarSign, FiCalendar, FiUser, 
   FiPhone, FiMapPin, FiPackage, FiLink, FiFileText, FiClock,
   FiPlus, FiExternalLink, FiMessageCircle, FiCheckCircle, FiAlertCircle,
-  FiShield, FiEdit3, FiChevronRight, FiPhoneCall, FiMail
+  FiShield, FiEdit3, FiChevronRight, FiPhoneCall, FiDownload
 } from 'react-icons/fi';
 
 const msg = (p, amt, received) => 
@@ -18,6 +19,7 @@ export default function ProjectDetails() {
   const [project, setProject] = useState(null);
   const [amount, setAmount] = useState('');
   const [mode, setMode] = useState('Cash');
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 16));
   const [meeting, setMeeting] = useState({
     date: new Date().toISOString().slice(0, 16),
     type: 'Call',
@@ -30,14 +32,23 @@ export default function ProjectDetails() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [paymentFormExpanded, setPaymentFormExpanded] = useState(false);
   const [meetingFormExpanded, setMeetingFormExpanded] = useState(false);
+  const [invoiceBusy, setInvoiceBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
       setIsLoading(true);
       const s = await get(ref(database, `projects/${id}`));
       const data = s.val();
-      setProject(data);
-      setEditedProject(data);
+      const normalized = data
+        ? {
+            ...data,
+            status: data.status || 'ongoing',
+            payments: data.payments || [],
+            meetings: data.meetings || [],
+          }
+        : null;
+      setProject(normalized);
+      setEditedProject(normalized);
       setIsLoading(false);
     })();
   }, [id]);
@@ -109,7 +120,11 @@ export default function ProjectDetails() {
 
   const addPayment = async () => {
     if (!amount || Number(amount) <= 0) return;
-    const payment = { amount: Number(amount || 0), mode, date: new Date().toISOString() };
+    const payment = { 
+      amount: Number(amount || 0), 
+      mode, 
+      date: paymentDate || new Date().toISOString()
+    };
     const next = [...(project.payments || []), payment];
     await update(ref(database, `projects/${id}`), { payments: next });
     const rec = next.reduce((a, p) => a + Number(p.amount || 0), 0);
@@ -119,6 +134,7 @@ export default function ProjectDetails() {
     );
     setProject({ ...project, payments: next });
     setAmount('');
+    setPaymentDate(new Date().toISOString().slice(0, 16));
     setPaymentFormExpanded(false);
   };
 
@@ -150,6 +166,18 @@ export default function ProjectDetails() {
 
   const amcStatus = getAmcStatus();
   const tabs = ['overview', 'payments', 'meetings', 'notes'];
+  const statusMeta = String(project?.status || 'ongoing').toLowerCase() === 'completed'
+    ? { label: 'Completed', chip: 'bg-emerald-50 text-emerald-700 border-emerald-100' }
+    : { label: 'Ongoing', chip: 'bg-blue-50 text-blue-700 border-blue-100' };
+
+  const downloadInvoice = async () => {
+    try {
+      setInvoiceBusy(true);
+      await downloadProjectInvoicePdf(project);
+    } finally {
+      setInvoiceBusy(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-transparent relative">
@@ -195,6 +223,16 @@ export default function ProjectDetails() {
             ) : (
               <>
                 <button
+                  onClick={downloadInvoice}
+                  disabled={invoiceBusy}
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl
+                    hover:bg-gray-50 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                  title="Download Invoice PDF"
+                >
+                  <FiDownload className="h-4 w-4" />
+                  <span className="hidden sm:inline">{invoiceBusy ? 'Preparing...' : 'Invoice'}</span>
+                </button>
+                <button
                   onClick={() => setIsEditing(true)}
                   className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl
                     hover:bg-gray-50 transition-all duration-200"
@@ -223,6 +261,9 @@ export default function ProjectDetails() {
                 <div className="flex items-center gap-3 flex-wrap mb-2">
                   <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-100 text-xs font-mono font-bold text-gray-600">
                     {project.serial}
+                  </span>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-semibold ${statusMeta.chip}`}>
+                    {statusMeta.label}
                   </span>
                   {amcStatus && (
                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold ${amcStatus.color}`}>
@@ -397,6 +438,28 @@ export default function ProjectDetails() {
                 <div className="space-y-3">
                   <InfoRow icon={FiPackage} label="Product" value={project.product} isEditing={isEditing} editedValue={editedProject?.product} onChange={(v) => setEditedProject({ ...editedProject, product: v })} />
                   <InfoRow icon={FiFileText} label="Project Type" value={project.projectType} isEditing={isEditing} editedValue={editedProject?.projectType} onChange={(v) => setEditedProject({ ...editedProject, projectType: v })} />
+                  <div className="flex items-center justify-between py-2.5 px-3 bg-gray-50 rounded-xl group hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FiCheckCircle className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      <span className="text-xs text-gray-500">Status</span>
+                    </div>
+                    <div className="ml-4 text-right min-w-0 flex-1">
+                      {isEditing ? (
+                        <select
+                          value={editedProject?.status || 'ongoing'}
+                          onChange={(e) => setEditedProject({ ...editedProject, status: e.target.value })}
+                          className="w-full text-right text-sm font-medium text-gray-900 bg-transparent border-b border-orange-200 focus:border-orange-500 outline-none"
+                        >
+                          <option value="ongoing">Ongoing</option>
+                          <option value="completed">Completed</option>
+                        </select>
+                      ) : (
+                        <span className={`inline-flex items-center justify-end px-2.5 py-1 rounded-full border text-xs font-semibold ${statusMeta.chip}`}>
+                          {statusMeta.label}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   <InfoRow icon={FiCalendar} label="Created" value={new Date(project.createdAt).toLocaleString('en-IN')} />
                   <InfoRow icon={FiLink} label="Link" value={project.link} isEditing={isEditing} editedValue={editedProject?.link} onChange={(v) => setEditedProject({ ...editedProject, link: v })} isLink />
                 </div>
@@ -521,6 +584,16 @@ export default function ProjectDetails() {
                           ))}
                         </select>
                       </div>
+                      <div className="min-w-[160px]">
+                        <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Date</label>
+                        <input
+                          type="datetime-local"
+                          value={paymentDate}
+                          onChange={(e) => setPaymentDate(e.target.value)}
+                          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm
+                            focus:ring-2 focus:ring-orange-100 focus:border-orange-300 outline-none transition-all"
+                        />
+                      </div>
                       <div className="flex items-end">
                         <button
                           onClick={addPayment}
@@ -560,7 +633,13 @@ export default function ProjectDetails() {
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-gray-900">{formatINR(p.amount)}</p>
-                            <p className="text-xs text-gray-400">{new Date(p.date).toLocaleString('en-IN')}</p>
+                            <p className="text-xs text-gray-400">{new Date(p.date).toLocaleString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}</p>
                           </div>
                         </div>
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[11px] font-medium">

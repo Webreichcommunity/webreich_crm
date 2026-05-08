@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { onValue, ref } from 'firebase/database';
 import { database } from '../db/firebase';
 import { formatINR, getMonthKey } from './projectUtils';
@@ -22,7 +22,6 @@ export default function ReportsPage() {
     } catch {
       // ignore
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -42,11 +41,13 @@ export default function ReportsPage() {
       projects.map((p) => {
         const paid = (p.payments || []).reduce((a, x) => a + Number(x.amount || 0), 0);
         return {
+          serial: p.serial || '',
           clientName: p.clientName,
           date: p.createdAt,
           month: getMonthKey(p.createdAt),
           product: p.product,
           businessName: p.projectName,
+          status: p.status || 'ongoing',
           earning: paid,
           budget: Number(p.budget || 0),
           highPay: paid > 100000,
@@ -73,14 +74,29 @@ export default function ReportsPage() {
 
   const top = useMemo(() => [...filtered].sort((a, b) => b.earning - a.earning)[0], [filtered]);
   const topFive = useMemo(() => [...filtered].sort((a, b) => b.earning - a.earning).slice(0, 5), [filtered]);
+  const statusCounts = useMemo(
+    () =>
+      filtered.reduce(
+        (acc, r) => {
+          const s = String(r.status || 'ongoing').toLowerCase();
+          if (s === 'completed' || s === 'complete' || s === 'done') acc.completed += 1;
+          else acc.ongoing += 1;
+          return acc;
+        },
+        { completed: 0, ongoing: 0 }
+      ),
+    [filtered]
+  );
 
   const exportExcel = () => {
     const exportData = filtered.map((r) => ({
+      Serial: r.serial || '',
       Client: r.clientName,
       Date: r.date ? new Date(r.date).toLocaleDateString('en-IN') : '',
       Month: r.month,
       Product: r.product,
       Project: r.businessName,
+      Status: r.status || 'ongoing',
       Budget: Number(r.budget || 0),
       Earning: Number(r.earning || 0),
       Pending: Number(r.budget || 0) - Number(r.earning || 0),
@@ -186,6 +202,8 @@ export default function ReportsPage() {
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="wr-chip">Rows: {filtered.length}</span>
             {top?.businessName && <span className="wr-chip">Top project: {top.businessName}</span>}
+            <span className="wr-chip">Ongoing: {statusCounts.ongoing}</span>
+            <span className="wr-chip">Completed: {statusCounts.completed}</span>
           </div>
         </div>
         {loading ? (
@@ -291,7 +309,7 @@ export default function ReportsPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-50">
-                      {['Client', 'Date', 'Month', 'Product', 'Project', 'Earning', 'Status'].map((header) => (
+                      {['Serial', 'Client', 'Date', 'Month', 'Product', 'Project', 'Earning', 'Project Status', 'Payment Band'].map((header) => (
                         <th
                           key={header}
                           className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider"
@@ -307,6 +325,11 @@ export default function ReportsPage() {
                         key={i}
                         className="group hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-transparent transition-all duration-200"
                       >
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-50 text-xs font-mono font-bold text-gray-600 border border-gray-100">
+                            {r.serial || '—'}
+                          </span>
+                        </td>
                         <td className="px-6 py-4">
                           <span className="text-sm font-medium text-gray-900">{r.clientName}</span>
                         </td>
@@ -332,6 +355,19 @@ export default function ReportsPage() {
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-sm font-semibold text-gray-900">{formatINR(r.earning)}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {String(r.status || 'ongoing').toLowerCase() === 'completed' ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-xs font-semibold text-emerald-700 border border-emerald-100">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              Completed
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-xs font-semibold text-blue-700 border border-blue-100">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                              Ongoing
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           {r.highPay ? (
